@@ -169,3 +169,6 @@ def readVocs(datafile, corpus_name):
     pairs = [[normalizeString(s) for s in l.split('\t')] for l in lines]
     voc = Voc(corpus_name)
     return voc,pairs
+
+def filterPair(p):
+    return len( p[0].split(' ')) < MAX_LENGTH and len(p[1].split(' ')) < MAX_LENGTH
