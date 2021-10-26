@@ -147,7 +147,7 @@ class Voc:
             self.addWord(word)
 
 
-MAX_LENGTH = 10
+MAX_LENGTH = 14
 
 def unicodeToAscii(s):
     return ''.join(
@@ -166,9 +166,69 @@ def readVocs(datafile, corpus_name):
     print("Reading lines...")
     line = open(datafile, encoding='utf-8').\
         read().strip().split('\n')
-    pairs = [[normalizeString(s) for s in l.split('\t')] for l in lines]
+    pairs = [[normalizeString(s) for s in l.split('\t')] for l in line]
     voc = Voc(corpus_name)
     return voc,pairs
 
 def filterPair(p):
+    if len(p)<2:
+        print(p)
     return len( p[0].split(' ')) < MAX_LENGTH and len(p[1].split(' ')) < MAX_LENGTH
+
+def filterPairs(s):
+    return [pair for pair in s if filterPair(pair)]
+
+def loadPrepareData(corpus, corpus_name, datafile, save_dir):
+    print("Start preparing training data ...")
+    voc, pairs = readVocs(datafile, corpus_name)
+    print("Read {!s} sentence pairs".format(len(pairs)))
+    pairs = filterPairs(pairs)
+    print("Trimmeed to {!s} sentence pairs".format(len(pairs)))
+    print("Counting words...")
+    for pair in pairs:
+        voc.addSentence(pair[0])
+        voc.addSentence(pair[1])
+    print("Counted words: ",voc.num_words )
+    return voc, pairs
+
+save_dir = os.path.join("data","save")
+voc, pairs = loadPrepareData(corpus, corpus_name, datafile, save_dir)
+print("\npairs:")
+for pair in pairs[:10]:
+    print(pair)
+
+MIN_COUNT = 3
+
+def trimRareWords(voc, pairs, MIN_COUNT):
+    voc.trim(MIN_COUNT)
+    keep_pairs = []
+    for pair in pairs:
+        input_sentence = pair[0]
+        output_sentence = pair[1]
+        keep_input = True
+        keep_output = True
+
+        for word in input_sentence.split(' '):
+            if word not in voc.word2index:
+                keep_input = False
+                break
+
+        for word in output_sentence.split(' '):
+            if word not in voc.word2index:
+                keep_output = False
+                break
+
+        if keep_input and keep_output:
+            keep_pairs.append(pair)
+
+    print("Trimmed from {} pairs to {}, {:.4f} of total".format(len(pairs),
+                                                                len(keep_pairs),
+                                                                len(keep_pairs)/len(pairs)
+                                                                ))
+    return keep_pairs
+
+
+pairs = trimRareWords(voc,pairs,MIN_COUNT)
+
+
+
