@@ -230,5 +230,8 @@ def trimRareWords(voc, pairs, MIN_COUNT):
 
 pairs = trimRareWords(voc,pairs,MIN_COUNT)
 
+def indexesFromSentence(voc, sentence):
+    return [voc.word2index[word] for word in sentence.split(' ')] + [EOS_token]
+
 
 
